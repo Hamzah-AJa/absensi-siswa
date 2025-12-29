@@ -9,10 +9,12 @@ class Siswa extends Model
     protected $table = 'siswa';
 
     protected $fillable = [
-        'nama',      // ← BENAR untuk siswa
-        'kelas',     // ← BENAR untuk siswa
-        'wali_id',   // ← BENAR untuk siswa
-        // HAPUS SEMUA: name, email, password, role, dll - itu untuk User!
+        'nis',
+        'nama',
+        'kelas',
+        'no_telepon',
+        'alamat',
+        'wali_id',
     ];
 
     public function wali()
