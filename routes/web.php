@@ -10,7 +10,6 @@ use App\Http\Controllers\WaliController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\WaliRegisterController;
 use Illuminate\Support\Facades\Auth;
-use App\Http\Controllers\Auth\RegisterController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -43,14 +42,6 @@ Route::post('/login', function (Illuminate\Http\Request $request) {
     ])->onlyInput('email');
 })->middleware('guest');
 
-// Register (guest only)
-Route::get('/register', [RegisterController::class, 'show'])
-    ->name('register')
-    ->middleware('guest');
-
-Route::post('/register', [RegisterController::class, 'store'])
-    ->middleware('guest');
-
 Route::post('/logout', function (Illuminate\Http\Request $request) {
     Auth::logout();
     $request->session()->invalidate();
@@ -58,7 +49,6 @@ Route::post('/logout', function (Illuminate\Http\Request $request) {
     return redirect('/login');
 })->name('logout');
 
-// Register Wali - HARUS DI LUAR MIDDLEWARE AUTH
 Route::get('/register-wali', [WaliRegisterController::class, 'showRegistrationForm'])
     ->name('register.wali')
     ->middleware('guest');
@@ -73,11 +63,14 @@ Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallba
 
 // Routes yang memerlukan authentication
 Route::middleware(['auth'])->group(function () {
+
+    Route::post('/izin/{izin}/konfirmasi', [App\Http\Controllers\IzinController::class, 'konfirmasi'])->name('izin.konfirmasi');
     
     // Dashboard - Untuk Guru dan Admin
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard')
         ->middleware('role:guru,admin');
+    
 
     // Presensi - Untuk Guru dan Admin
     Route::middleware('role:guru,admin')->group(function () {
@@ -95,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/siswa', [SiswaController::class, 'store'])->name('siswa.store');
         Route::get('/siswa/{id}/edit', [SiswaController::class, 'edit'])->name('siswa.edit');
         Route::put('/siswa/{id}', [SiswaController::class, 'update'])->name('siswa.update');
-        Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy');
+        Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])->name('siswa.destroy'); // Admin only
     });
 
     // Laporan - Untuk Guru dan Admin
@@ -108,28 +101,41 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('role:guru,admin')->group(function () {
         Route::get('/profile', [UserController::class, 'profile'])->name('user.profile');
         Route::put('/profile/password', [UserController::class, 'updatePassword'])->name('user.password');
+        Route::post('/profile/photo', [UserController::class, 'updatePhoto'])->name('user.update.photo');
         Route::post('/profile/unlink-google', [GoogleController::class, 'unlinkGoogle'])->name('google.unlink');
     });
 
     // User Management - Khusus Admin
-    Route::middleware('role:admin')->prefix('users')->name('user.')->group(function () {
+    // Admin User Management Routes
+    Route::middleware(['auth', 'role:admin'])->prefix('users')->name('user.')->group(function () {
         Route::get('/', [UserController::class, 'manageUsers'])->name('manage');
         Route::get('/create', [UserController::class, 'createUser'])->name('create');
         Route::post('/', [UserController::class, 'storeUser'])->name('store');
         Route::get('/{id}/edit', [UserController::class, 'editUser'])->name('edit');
         Route::put('/{id}', [UserController::class, 'updateUser'])->name('update');
         Route::delete('/{id}', [UserController::class, 'destroyUser'])->name('destroy');
-    });
+   });
 
-    // Wali Routes
-    Route::middleware('role:wali')->prefix('wali')->group(function () {
-        Route::get('/dashboard', [WaliController::class, 'dashboard'])->name('wali.dashboard');
-        Route::get('/izin', [WaliController::class, 'izinForm'])->name('wali.izin');
-        Route::post('/izin', [WaliController::class, 'submitIzin'])->name('wali.izin.submit');
-        Route::get('/izin/riwayat', [WaliController::class, 'riwayatIzin'])->name('wali.izin.riwayat');
-        Route::get('/profile', [WaliController::class, 'profile'])->name('wali.profile');
-        Route::put('/profile', [WaliController::class, 'updateProfile'])->name('wali.profile.update');
-        Route::put('/profile/password', [WaliController::class, 'updatePassword'])->name('wali.password');
-        Route::post('/profile/unlink-google', [GoogleController::class, 'unlinkGoogle'])->name('wali.google.unlink');
+   
+// Wali Routes (Update yang sudah ada)
+Route::middleware('role:wali')->prefix('wali')->group(function () {
+    Route::get('/dashboard', [WaliController::class, 'dashboard'])->name('wali.dashboard');
+    Route::get('/izin', [WaliController::class, 'izinForm'])->name('wali.izin');
+    Route::post('/izin', [WaliController::class, 'submitIzin'])->name('wali.izin.submit');
+    Route::get('/izin/riwayat', [WaliController::class, 'riwayatIzin'])->name('wali.izin.riwayat');
+    Route::get('/profile', [WaliController::class, 'profile'])->name('wali.profile');
+    Route::put('/profile', [WaliController::class, 'updateProfile'])->name('wali.profile.update');
+    Route::put('/profile/password', [WaliController::class, 'updatePassword'])->name('wali.password');
+    Route::post('/profile/unlink-google', [GoogleController::class, 'unlinkGoogle'])->name('wali.google.unlink');
+});
+Route::middleware(['auth', 'role:wali'])->prefix('wali')->name('wali.')->group(function () {
+        Route::get('/dashboard', [WaliController::class, 'dashboard'])->name('dashboard');
+        Route::get('/izin', [WaliController::class, 'izinForm'])->name('izin');
+        Route::post('/izin', [WaliController::class, 'submitIzin'])->name('izin.submit');
+        Route::get('/izin/riwayat', [WaliController::class, 'riwayatIzin'])->name('izin.riwayat');
+        Route::get('/profile', [WaliController::class, 'profile'])->name('profile');
+        Route::put('/profile', [WaliController::class, 'updateProfile'])->name('profile.update');
+        Route::put('/profile/password', [WaliController::class, 'updatePassword'])->name('password');
+        Route::post('/profile/unlink-google', [GoogleController::class, 'unlinkGoogle'])->name('google.unlink');
     });
 });

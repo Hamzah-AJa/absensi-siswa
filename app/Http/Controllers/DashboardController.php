@@ -6,6 +6,7 @@ use App\Models\Presensi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\Izin;
 
 class DashboardController extends Controller
 {
@@ -76,5 +77,19 @@ class DashboardController extends Controller
             'dataHariIni', 'dataMingguIni',
             'kelasList', 'mapelList'
         ));
+
+        // IZIN PENDING - TAMBAH INI
+    $izinPending = Izin::where('status', 'pending')
+        ->with('siswa')
+        ->orderBy('created_at', 'desc')
+        ->limit(10)
+        ->get();
+
+    return view('dashboard', compact(
+        'hadir', 'izin', 'sakit', 'alpa',
+        'kelasList', 'mapelList',
+        'dataHariIni', 'dataMingguIni',
+        'izinPending'  // ← TAMBAH INI
+    ));
     }
 }

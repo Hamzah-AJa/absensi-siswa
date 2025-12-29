@@ -185,6 +185,88 @@
     </div>
 </div>
 
+<!-- Tabel Izin Pending - SELALU TAMPIL -->
+<div class="card mb-4">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="bi bi-envelope-paper-heart text-warning me-2"></i>
+            Izin Pending
+        </h5>
+    </div>
+    <div class="card-body">
+        @php
+            $izinPending = \App\Models\Izin::where('status', 'pending')
+                ->with('siswa')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
+        @endphp
+        
+        @if($izinPending->count() > 0)
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Siswa</th>
+                            <th>Kelas</th>
+                            <th>Keterangan</th>
+                            <th>Tanggal</th>
+                            <th>Alasan</th>
+                            <th>Foto</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($izinPending as $izin)
+                        <tr>
+                            <td><strong>{{ $izin->siswa->nama }}</strong></td>
+                            <td>{{ $izin->siswa->kelas }}</td>
+                            <td>
+                                @if($izin->keterangan == 'sakit')
+                                    <span class="badge bg-danger">Sakit</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">Izin</span>
+                                @endif
+                            </td>
+                            <td>
+                                {{ $izin->tanggal_mulai->format('d/m/Y') }}
+                                @if($izin->tanggal_mulai->ne($izin->tanggal_selesai))
+                                    <br><small class="text-muted">s/d {{ $izin->tanggal_selesai->format('d/m/Y') }}</small>
+                                @endif
+                            </td>
+                            <td>{{ Str::limit($izin->alasan, 40) }}</td>
+                            <td>
+                                @if($izin->foto_bukti)
+                                    <a href="{{ asset('storage/' . $izin->foto_bukti) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                @else
+                                    <span class="text-muted">-</span>
+                                @endif
+                            </td>
+                            <td>
+                                <form action="{{ route('izin.konfirmasi', $izin->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    <button type="submit" class="btn btn-sm btn-success" 
+                                            onclick="return confirm('Konfirmasi izin {{ $izin->siswa->nama }}?')">
+                                        <i class="bi bi-check-lg"></i> Konfirmasi
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="text-center py-4">
+                <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                <p class="mt-3 text-muted">Tidak ada izin pending</p>
+            </div>
+        @endif
+    </div>
+</div>
+
 <!-- Tabel Presensi Minggu Ini -->
 <div class="card">
     <div class="card-header bg-white">

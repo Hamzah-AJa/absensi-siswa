@@ -9,16 +9,11 @@ class Siswa extends Model
     protected $table = 'siswa';
 
     protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'role',
-        'mapel',
-        'google_id',
-        'izin_tanpa_foto',
-        'profile_photo'
+        'nama',      // ← BENAR untuk siswa
+        'kelas',     // ← BENAR untuk siswa
+        'wali_id',   // ← BENAR untuk siswa
+        // HAPUS SEMUA: name, email, password, role, dll - itu untuk User!
     ];
-
 
     public function wali()
     {
@@ -27,11 +22,11 @@ class Siswa extends Model
 
     public function presensi()
     {
-        return $this->hasMany(Presensi::class);
+        return $this->hasMany(Presensi::class, 'siswa_id');  // ← tambah siswa_id
     }
 
     public function izin()
     {
-        return $this->hasMany(Izin::class);
+        return $this->hasMany(Izin::class, 'siswa_id');      // ← tambah siswa_id
     }
 }
