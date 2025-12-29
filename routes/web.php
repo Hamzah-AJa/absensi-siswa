@@ -122,6 +122,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/izin', [WaliController::class, 'izinForm'])->name('izin');
         Route::post('/izin', [WaliController::class, 'submitIzin'])->name('izin.submit');
         Route::get('/izin/riwayat', [WaliController::class, 'riwayatIzin'])->name('izin.riwayat');
+         Route::delete('/izin/{id}', [WaliController::class, 'destroyIzin'])
+        ->name('izin.destroy');
         Route::get('/profile', [WaliController::class, 'profile'])->name('profile');
         Route::put('/profile', [WaliController::class, 'updateProfile'])->name('profile.update');
         Route::put('/profile/password', [WaliController::class, 'updatePassword'])->name('password');

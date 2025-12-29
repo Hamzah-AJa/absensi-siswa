@@ -16,7 +16,7 @@ class WaliController extends Controller
     {
         $user = Auth::user();
         $siswa = Siswa::where('wali_id', $user->id)->get();
-        
+
         $siswaIds = $siswa->pluck('id');
         $presensi = Presensi::whereIn('siswa_id', $siswaIds)
             ->with('siswa')
@@ -35,18 +35,17 @@ class WaliController extends Controller
     }
 
     public function submitIzin(Request $request)
-{
-    $user = Auth::user();
+    {
+        $user = Auth::user();
 
-    $request->validate([
-    'siswa_id' => 'required|exists:siswa,id',
-    'keterangan' => 'required|in:izin,sakit',  // ✅ TAMBAH
-    'tanggal_mulai' => 'required|date',
-    'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-    'alasan' => 'required|string|max:1000',
-    'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-]);
-        // Cek apakah siswa milik wali ini
+        $request->validate([
+            'siswa_id' => 'required|exists:siswa,id',
+            'keterangan' => 'required|in:izin,sakit',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'alasan' => 'required|string|max:1000',
+            'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
         $siswa = Siswa::where('id', $request->siswa_id)
             ->where('wali_id', $user->id)
             ->first();
@@ -60,34 +59,53 @@ class WaliController extends Controller
             $fotoPath = $request->file('foto_bukti')->store('izin', 'public');
         }
 
-        // SESUAI MIGRASI: wali_id, siswa_id, alasan, tanggal, foto_bukti
         Izin::create([
-    'wali_id' => $user->id,
-    'siswa_id' => $request->siswa_id,
-    'keterangan' => $request->keterangan,  // ✅ TAMBAH
-    'tanggal_mulai' => $request->tanggal_mulai,
-    'tanggal_selesai' => $request->tanggal_selesai,
-    'alasan' => $request->alasan,
-    'foto_bukti' => $fotoPath,
-    'status' => 'pending',
-]);
+            'wali_id' => $user->id,
+            'siswa_id' => $request->siswa_id,
+            'keterangan' => $request->keterangan,
+            'tanggal_mulai' => $request->tanggal_mulai,
+            'tanggal_selesai' => $request->tanggal_selesai,
+            'alasan' => $request->alasan,
+            'foto_bukti' => $fotoPath,
+            'status' => 'pending',
+        ]);
 
         return back()->with('success', 'Izin berhasil diajukan!');
     }
 
     public function riwayatIzin()
-{
-    $user = Auth::user();
-    $siswa = Siswa::where('wali_id', $user->id)->pluck('id');
-    
-    $izin = Izin::whereIn('siswa_id', $siswa)
-                ->with('siswa')
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+    {
+        $user = Auth::user();
+        $siswa = Siswa::where('wali_id', $user->id)->pluck('id');
 
-    return view('wali.riwayat-izin', compact('izin'));
-}
+        $izin = Izin::whereIn('siswa_id', $siswa)
+            ->with('siswa')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
+        return view('wali.riwayat-izin', compact('izin'));
+    }
+
+    public function destroyIzin($id)
+    {
+        $user = Auth::user();
+
+        $izin = Izin::where('id', $id)
+            ->where('wali_id', $user->id)
+            ->firstOrFail();
+
+        if ($izin->status !== 'approved') {
+            return back()->with('error', 'Izin belum disetujui, tidak bisa dihapus.');
+        }
+
+        if ($izin->foto_bukti && Storage::disk('public')->exists($izin->foto_bukti)) {
+            Storage::disk('public')->delete($izin->foto_bukti);
+        }
+
+        $izin->delete();
+
+        return back()->with('success', 'Izin berhasil dihapus.');
+    }
 
     public function profile()
     {
