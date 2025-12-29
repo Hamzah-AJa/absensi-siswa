@@ -10,6 +10,7 @@ use App\Http\Controllers\WaliController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Auth\WaliRegisterController;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Auth\RegisterController;
 
 // Redirect root ke login
 Route::get('/', function () {
@@ -41,6 +42,14 @@ Route::post('/login', function (Illuminate\Http\Request $request) {
         'email' => 'Email atau password salah.',
     ])->onlyInput('email');
 })->middleware('guest');
+
+// Register (guest only)
+Route::get('/register', [RegisterController::class, 'show'])
+    ->name('register')
+    ->middleware('guest');
+
+Route::post('/register', [RegisterController::class, 'store'])
+    ->middleware('guest');
 
 Route::post('/logout', function (Illuminate\Http\Request $request) {
     Auth::logout();

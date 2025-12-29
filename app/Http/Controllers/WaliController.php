@@ -17,6 +17,7 @@ class WaliController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
+<<<<<<< HEAD
         $siswa = Siswa::where('wali_id', $user->id)->get();
         
         // Ambil presensi siswa yang di-wali (7 hari terakhir)
@@ -41,7 +42,8 @@ class WaliController extends Controller
         }
 
         return view('wali.dashboard', compact('siswa', 'presensi', 'statistik'));
-    }
+
+
 
     public function izinForm()
     {
@@ -88,7 +90,7 @@ class WaliController extends Controller
             if ($user->izin_tanpa_foto >= 2) {
                 return back()->withErrors(['foto_bukti' => 'Anda telah mencapai batas 2x pengajuan tanpa foto. Mohon lampirkan foto bukti.']);
             }
-            
+
             // Tambah counter
             $user->increment('izin_tanpa_foto');
         }
