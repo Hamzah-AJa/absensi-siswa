@@ -7,10 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Siswa extends Model
 {
     protected $table = 'siswa';
-    
+
     protected $fillable = [
-        'nis', 'nama', 'kelas', 'no_telepon', 'alamat', 'wali_id'
+        'name',
+        'email',
+        'password',
+        'role',
+        'mapel',
+        'google_id',
+        'izin_tanpa_foto',
+        'profile_photo'
     ];
+
 
     public function wali()
     {

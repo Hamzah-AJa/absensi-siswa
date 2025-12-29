@@ -14,17 +14,15 @@ class WaliController extends Controller
     public function dashboard()
     {
         $user = Auth::user();
-        $siswa = Siswa::where('wali_id', $user->id)->get();
-        
-        // Ambil presensi siswa yang di-wali
-        $siswaIds = $siswa->pluck('id');
-        $presensi = Presensi::whereIn('siswa_id', $siswaIds)
-            ->with('siswa')
-            ->latest()
-            ->paginate(15);
 
-        return view('wali.dashboard', compact('siswa', 'presensi'));
+        // Semua siswa milik wali
+        $siswa = $user->siswa()->with(['presensi' => function ($q) {
+            $q->latest()->limit(5);
+        }])->get();
+
+        return view('wali.dashboard', compact('siswa'));
     }
+
 
     public function izinForm()
     {
@@ -59,7 +57,7 @@ class WaliController extends Controller
             if ($user->izin_tanpa_foto >= 2) {
                 return back()->withErrors(['foto_bukti' => 'Anda telah mencapai batas 2x pengajuan tanpa foto. Mohon lampirkan foto bukti.']);
             }
-            
+
             // Tambah counter
             $user->increment('izin_tanpa_foto');
         }
