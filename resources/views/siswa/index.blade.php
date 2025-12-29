@@ -93,7 +93,7 @@
                 </tbody>
             </table>
         </div>
-        {{ $siswa->links() }}
+        {{ $siswa->appends(request()->query())->links('pagination::bootstrap-5') }}
     </div>
 </div>
 @endsection

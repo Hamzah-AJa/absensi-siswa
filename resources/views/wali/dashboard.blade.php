@@ -27,8 +27,29 @@
                         <ul class="mt-2 mb-3">
                             @forelse ($item->presensi->take(3) as $p)
                                 <li>
-                                    {{ \Carbon\Carbon::parse($p->tanggal)->format('d M Y') }}
-                                    - <span class="badge bg-secondary">{{ ucfirst($p->keterangan) }}</span>
+                                    <span class="me-2">
+                                        {{ \Carbon\Carbon::parse($p->tanggal)->isoFormat('D MMMM') }}
+                                        @if($p->mapel && $p->keterangan == 'hadir')
+                                            - {{ $p->mapel }}
+                                        @endif
+                                    </span>
+                                    @if($p->keterangan == 'hadir')
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle me-1"></i>Hadir
+                                        </span>
+                                    @elseif($p->keterangan == 'izin')
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-envelope-paper me-1"></i>Izin
+                                        </span>
+                                    @elseif($p->keterangan == 'sakit')
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-heart-pulse me-1"></i>Sakit
+                                        </span>
+                                    @else
+                                        <span class="badge bg-danger">
+                                            <i class="bi bi-x-circle me-1"></i>Alpa
+                                        </span>
+                                    @endif
                                 </li>
                             @empty
                                 <li class="text-muted">Belum ada presensi</li>
