@@ -186,6 +186,7 @@
 </div>
 
 <!-- Tabel Izin Pending - SELALU TAMPIL -->
+<!-- Tabel Izin Pending - SELALU TAMPIL -->
 <div class="card mb-4">
     <div class="card-header bg-white d-flex justify-content-between align-items-center">
         <h5 class="mb-0">
@@ -245,13 +246,22 @@
                                 @endif
                             </td>
                             <td>
-                                <form action="{{ route('izin.konfirmasi', $izin->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-success" 
-                                            onclick="return confirm('Konfirmasi izin {{ $izin->siswa->nama }}?')">
-                                        <i class="bi bi-check-lg"></i> Konfirmasi
-                                    </button>
-                                </form>
+                                <div class="btn-group" role="group">
+                                    <form action="{{ route('izin.konfirmasi', $izin) }}" method="POST" class="d-inline">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-success" 
+                                                onclick="return confirm('Konfirmasi izin {{ $izin->siswa->nama }}? (Auto buat presensi)')">
+                                            <i class="bi bi-check-lg"></i> Konfirmasi
+                                        </button>
+                                    </form>
+                                    <form action="{{ route('izin.tolak', $izin) }}" method="POST" class="d-inline ms-1">
+                                        @csrf
+                                        <button type="submit" class="btn btn-sm btn-danger" 
+                                                onclick="return confirm('Tolak izin {{ $izin->siswa->nama }}? (Auto buat presensi ALPA)')">
+                                            <i class="bi bi-x-lg"></i> Tolak
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         @endforeach

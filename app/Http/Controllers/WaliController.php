@@ -77,7 +77,11 @@ class WaliController extends Controller
 
     public function riwayatIzin()
 {
-    $izin = Izin::where('siswa_id', Auth::user()->wali_siswa_id)  // ← UBAH INI SAJA
+    $user = Auth::user();
+    $siswa = Siswa::where('wali_id', $user->id)->pluck('id');
+    
+    $izin = Izin::whereIn('siswa_id', $siswa)
+                ->with('siswa')
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
 
