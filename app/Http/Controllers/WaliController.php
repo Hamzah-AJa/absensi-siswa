@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Siswa;
 use App\Models\Izin;
 use App\Models\Presensi;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class WaliController extends Controller
 {
@@ -16,14 +19,28 @@ class WaliController extends Controller
         $user = Auth::user();
         $siswa = Siswa::where('wali_id', $user->id)->get();
         
-        // Ambil presensi siswa yang di-wali
+        // Ambil presensi siswa yang di-wali (7 hari terakhir)
         $siswaIds = $siswa->pluck('id');
         $presensi = Presensi::whereIn('siswa_id', $siswaIds)
+            ->where('tanggal', '>=', Carbon::now()->subDays(7))
             ->with('siswa')
-            ->latest()
-            ->paginate(15);
+            ->orderBy('tanggal', 'desc')
+            ->get();
 
-        return view('wali.dashboard', compact('siswa', 'presensi'));
+        // Hitung statistik per siswa
+        $statistik = [];
+        foreach ($siswa as $s) {
+            $statistik[$s->id] = [
+                'nama' => $s->nama,
+                'kelas' => $s->kelas,
+                'hadir' => $presensi->where('siswa_id', $s->id)->where('keterangan', 'hadir')->count(),
+                'izin' => $presensi->where('siswa_id', $s->id)->where('keterangan', 'izin')->count(),
+                'sakit' => $presensi->where('siswa_id', $s->id)->where('keterangan', 'sakit')->count(),
+                'alpa' => $presensi->where('siswa_id', $s->id)->where('keterangan', 'alpa')->count(),
+            ];
+        }
+
+        return view('wali.dashboard', compact('siswa', 'presensi', 'statistik'));
     }
 
     public function izinForm()
@@ -31,7 +48,14 @@ class WaliController extends Controller
         $user = Auth::user();
         $siswa = Siswa::where('wali_id', $user->id)->get();
 
-        return view('wali.izin', compact('siswa'));
+        // Reset counter setiap hari Senin
+        if (Carbon::now()->isMonday() && $user->izin_tanpa_foto > 0) {
+            $user->update(['izin_tanpa_foto' => 0]);
+        }
+
+        $sisaKuota = 2 - $user->izin_tanpa_foto;
+
+        return view('wali.izin', compact('siswa', 'sisaKuota'));
     }
 
     public function submitIzin(Request $request)
@@ -40,8 +64,8 @@ class WaliController extends Controller
 
         $request->validate([
             'siswa_id' => 'required|exists:siswa,id',
-            'alasan' => 'required|string',
             'tanggal' => 'required|date',
+            'alasan' => 'required|string',
             'foto_bukti' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
@@ -52,6 +76,11 @@ class WaliController extends Controller
 
         if (!$siswa) {
             return back()->withErrors(['siswa_id' => 'Siswa tidak valid']);
+        }
+
+        // Reset counter jika hari Senin
+        if (Carbon::now()->isMonday() && $user->izin_tanpa_foto > 0) {
+            $user->update(['izin_tanpa_foto' => 0]);
         }
 
         // Logika kuota foto
@@ -95,7 +124,28 @@ class WaliController extends Controller
     public function profile()
     {
         $user = Auth::user();
-        return view('wali.profile', compact('user'));
+        $siswa = Siswa::where('wali_id', $user->id)->get();
+        
+        return view('wali.profile', compact('user', 'siswa'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'no_telepon' => 'required|string|max:20',
+        ]);
+
+        $user->update([
+            'name' => $request->name,
+            'email' => $request->email,
+            'no_telepon' => $request->no_telepon,
+        ]);
+
+        return back()->with('success', 'Profil berhasil diupdate!');
     }
 
     public function updatePassword(Request $request)
