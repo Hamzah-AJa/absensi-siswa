@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Mail\EmailVerificationCode;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class UserController extends Controller
 {
@@ -14,26 +19,129 @@ class UserController extends Controller
      * Tampilkan profil user (Guru/Admin)
      */
     public function profile()
+    {
+        $user = Auth::user();
+        
+        if (!$user) {
+            return redirect('/login');
+        }
+        
+        // ADMIN → MANAGE USERS
+        if ($user->role == 'admin') {
+            return view('user.profile', compact('user'));
+        }
+        
+        // WALI → WALI PROFILE  
+        if (method_exists($user, 'isWali') && $user->isWali()) {
+            return redirect()->route('wali.profile');
+        }
+        
+        // GURU → USER PROFILE
+        return view('user.profile', compact('user'));
+    }
+
+    // ✅ FIXED: sendEmailVerification - SESSION DIRECT (NO MAIL)
+public function sendEmailVerification(Request $request)
 {
-    $user = Auth::user();
-    
-    if (!$user) {
-        return redirect('/login');
+    try {
+        $user = Auth::user();
+        
+        if ($user->email_verified_at) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Email sudah diverifikasi!'
+            ]);
+        }
+        
+        // ✅ GENERATE KODE & SIMPAN SESSION + DB
+        $code = str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $expires = now()->addMinutes(10);
+        
+        // DB + SESSION
+        \DB::transaction(function () use ($user, $code, $expires) {
+            $user->forceFill([
+                'email_verification_code' => $code,
+                'email_verification_expires_at' => $expires
+            ])->save();
+            $user->refresh();
+        });
+        
+        // ✅ SIMPAN DI SESSION (TAMPIL DI HALAMAN)
+        session([
+            'email_verification_code' => $code,
+            'email_verification_sent' => true,
+            'email_verification_email' => $user->email
+        ]);
+        
+        return response()->json([
+            'success' => true, 
+            'message' => 'Kode verifikasi TERSIMPAN!',
+            'code' => config('app.env') === 'local' ? $code : null,
+            'show_code' => true
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false, 
+            'message' => 'Error: ' . $e->getMessage()
+        ]);
     }
-    
-    // ADMIN → MANAGE USERS
-    if ($user->role == 'admin') {
-        return redirect()->route('user.manage');
-    }
-    
-    // WALI → WALI PROFILE  
-    if (method_exists($user, 'isWali') && $user->isWali()) {
-        return redirect()->route('wali.profile');
-    }
-    
-    // GURU → USER PROFILE
-    return view('user.profile', compact('user'));
 }
+
+// verifyEmail - SESUAI DB
+public function verifyEmail(Request $request)
+{
+    $request->validate(['verification_code' => 'required|digits:6']);
+    
+    $user = Auth::user()->fresh();
+    
+    if ($user->email_verified_at) {
+        return response()->json(['success' => false, 'message' => 'Sudah diverifikasi']);
+    }
+    
+    if ($user->email_verification_code !== $request->verification_code || 
+        now()->gt($user->email_verification_expires_at)) {
+        return response()->json(['success' => false, 'message' => 'Kode salah/kadaluarsa']);
+    }
+    
+    $user->update([
+        'email_verified_at' => now(),
+        'email_verification_code' => null,
+        'email_verification_expires_at' => null
+    ]);
+    
+    // CLEAR SESSION
+    session()->forget(['email_verification_code', 'email_verification_sent']);
+    
+    return response()->json(['success' => true, 'message' => 'VERIFIKASI BERHASIL! 🎉']);
+}
+
+    /**
+     * Update profil user (nama, email, no_telepon)
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'no_telepon' => 'nullable|string|max:20',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+        ];
+
+        if ($request->filled('no_telepon')) {
+            $data['no_telepon'] = $request->no_telepon;
+        }
+
+        $user->update($data);
+
+        return back()->with('success', 'Profil berhasil diupdate!');
+    }
 
     /**
      * Update foto profil - FIXED
@@ -100,8 +208,11 @@ class UserController extends Controller
 
         $guru = User::where('role', 'guru')->get();
         $wali = User::where('role', 'wali')->get();
+        $totalGuru = $guru->count();
+        $totalWali = $wali->count();
+        $total = $totalGuru + $totalWali;
 
-        return view('user.manage', compact('guru', 'wali'));
+        return view('user.manage', compact('guru', 'wali', 'totalGuru', 'totalWali', 'total'));
     }
 
     public function createUser()
@@ -124,15 +235,24 @@ class UserController extends Controller
             'password' => 'required|min:8|confirmed',
             'role' => 'required|in:guru,wali',
             'mapel' => 'required_if:role,guru',
+            'no_telepon' => 'nullable|string|max:20',
         ]);
 
-        User::create([
+        $data = [
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            'mapel' => $request->role == 'guru' ? $request->mapel : null,
-        ]);
+            'no_telepon' => $request->no_telepon,
+        ];
+
+        if ($request->role == 'guru' && $request->filled('mapel')) {
+            // Convert comma-separated string to array
+            $mapelArray = array_map('trim', explode(',', $request->mapel));
+            $data['mapel'] = $mapelArray;
+        }
+
+        User::create($data);
 
         return redirect()->route('user.manage')
             ->with('success', 'User berhasil ditambahkan!');
@@ -161,17 +281,23 @@ class UserController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'role' => 'required|in:guru,wali',
             'mapel' => 'required_if:role,guru',
+            'no_telepon' => 'nullable|string|max:20',
         ]);
 
         $data = [
             'name' => $request->name,
             'email' => $request->email,
             'role' => $request->role,
-            'mapel' => $request->role == 'guru' ? $request->mapel : null,
+            'no_telepon' => $request->no_telepon,
         ];
 
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
+        }
+
+        if ($request->role == 'guru' && $request->filled('mapel')) {
+            $mapelArray = array_map('trim', explode(',', $request->mapel));
+            $data['mapel'] = $mapelArray;
         }
 
         $user->update($data);

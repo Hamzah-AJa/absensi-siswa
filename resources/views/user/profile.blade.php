@@ -5,75 +5,75 @@
 @section('content')
 <div class="container-fluid py-4">
     <div class="row">
-        <!-- Profil Utama -->
+        <!-- Banner Profil Baru -->
         <div class="col-12">
-            <div class="card shadow-lg border-0">
-                <div class="card-header bg-gradient-primary text-white p-4">
-                    <div class="row align-items-center">
-                        <div class="col-md-3 text-center text-md-start">
-                            <div class="position-relative">
-                                @if($user->profile_photo && Storage::disk('public')->exists($user->profile_photo))
-                                    <img src="{{ asset('storage/' . $user->profile_photo) }}" 
-                                         class="avatar avatar-xxl rounded-circle shadow" 
-                                         style="width: 140px; height: 140px; object-fit: cover;"
-                                         alt="{{ $user->name }}" id="profilePhoto">
-                                @else
-                                    <div class="avatar avatar-xxl bg-white bg-opacity-20 text-white rounded-circle shadow d-flex align-items-center justify-content-center" 
-                                         style="width: 140px; height: 140px;" id="profilePhoto">
-                                        {{ substr($user->name, 0, 1) }}
-                                        <i class="bi bi-person-badge fs-2 ms-1"></i>
-                                    </div>
-                                @endif
-                                <!-- Tombol Edit Foto -->
-                                <button class="btn btn-sm btn-light position-absolute top-0 end-0 rounded-circle shadow" 
-                                        style="width: 32px; height: 32px; z-index: 10;" 
-                                        data-bs-toggle="modal" data-bs-target="#photoModal" title="Ganti Foto Profil">
-                                    <i class="bi bi-pencil fs-6"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-9">
-                            <div class="row">
-                                <div class="col">
-                                    <h2 class="mb-1 fw-bold">{{ $user->name }}</h2>
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <span class="badge bg-light text-dark fs-6 px-3 py-2 border">
-                                            {{ $user->role == 'guru' ? 'GURU' : 'ADMIN' }}
-                                        </span>
-                                        @if($user->mapel)
-                                        <span class="badge bg-primary fs-6 px-3 py-2">{{ $user->mapel }}</span>
-                                        @endif
-                                    </div>
-                                    <p class="text-white-50 mb-0">
-                                        ID: {{ $user->id }} • Dibuat: {{ $user->created_at->format('d M Y') }}
-                                    </p>
+            <div class="card shadow-lg border-0 overflow-hidden">
+                <!-- Banner Header dengan Gradient -->
+                <div class="banner-gradient p-5" style="background: linear-gradient(135deg, #e84c93 0%, #b24dd8 50%, #5e7af5 100%); min-height: 200px; position: relative;">
+                    <div class="row align-items-center h-100">
+                        <!-- Avatar dengan Edit Button -->
+                        <div class="col-auto position-relative">
+                            @if($user->profile_photo && Storage::disk('public')->exists($user->profile_photo))
+                                <img src="{{ asset('storage/' . $user->profile_photo) }}" 
+                                     class="rounded-circle shadow-lg border border-5 border-white" 
+                                     style="width: 180px; height: 180px; object-fit: cover;"
+                                     alt="{{ $user->name }}" id="profilePhoto">
+                            @else
+                                <div class="bg-white bg-opacity-20 text-white rounded-circle shadow-lg border border-5 border-white d-flex align-items-center justify-content-center" 
+                                     style="width: 180px; height: 180px; font-size: 4rem; font-weight: bold;">
+                                    {{ strtoupper(substr($user->name, 0, 1)) }}
                                 </div>
+                            @endif
+                            <!-- Tombol Edit Foto -->
+                            <button class="btn btn-light btn-sm rounded-circle shadow position-absolute" 
+                                    style="width: 40px; height: 40px; bottom: 10px; right: 10px;" 
+                                    data-bs-toggle="modal" data-bs-target="#photoModal" title="Ganti Foto Profil">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                        </div>
+
+                        <!-- Info User -->
+                        <div class="col">
+                            <h1 class="text-white fw-bold mb-2" style="font-size: 2.5rem;">{{ $user->name }}</h1>
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <span class="badge bg-white text-dark px-3 py-2 fs-6 fw-semibold rounded-pill">
+                                    {{ $user->role == 'guru' ? 'GURU' : 'ADMIN' }}
+                                </span>
+                                @if($user->mapel)
+                                    @if(is_array($user->mapel))
+                                        @foreach($user->mapel as $mapel)
+                                            <span class="badge bg-white text-primary px-3 py-2 fs-6 rounded-pill">{{ $mapel }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="badge bg-white text-primary px-3 py-2 fs-6 rounded-pill">{{ $user->mapel }}</span>
+                                    @endif
+                                @endif
                             </div>
+                            <p class="text-white mb-0 opacity-75">
+                                <i class="bi bi-calendar-check me-2"></i>Dibuat: {{ $user->created_at->format('d M Y') }}
+                            </p>
                         </div>
                     </div>
                 </div>
+
+                <!-- Card Body dengan Info Detail -->
                 <div class="card-body p-4">
                     <div class="row g-4">
                         <!-- Email Card -->
                         <div class="col-md-6">
-                            <div class="card h-100 border-0 shadow-sm">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
                                 <div class="card-body">
                                     <h6 class="card-title text-muted mb-3">
                                         <i class="bi bi-envelope me-2"></i>Email
                                     </h6>
-                                    <h5 class="mb-1">{{ $user->email }}</h5>
-                                    <small class="text-muted">
-                                        Verifikasi: {{ $user->email_verified_at 
-                                            ? \Carbon\Carbon::parse($user->email_verified_at)->format('d M Y') 
-                                            : 'Belum diverifikasi' }}
-                                    </small>
+                                    <h5 class="mb-0">{{ $user->email }}</h5>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Last Login Card -->
                         <div class="col-md-6">
-                            <div class="card h-100 border-0 shadow-sm">
+                            <div class="card h-100 border-0 shadow-sm bg-light">
                                 <div class="card-body">
                                     <h6 class="card-title text-muted mb-3">
                                         <i class="bi bi-clock-history me-2"></i>Terakhir Login
@@ -111,7 +111,7 @@
                                                 @csrf
                                                 <button type="submit" class="btn btn-outline-danger btn-sm px-3 py-1" 
                                                         onclick="return confirm('Yakin hapus tautan Google?')">
-                                                    <i class="bi bi-unlink me-1"></i>Unlink
+                                                    <i class="bi bi-unlink me-1"></i>Putuskan
                                                 </button>
                                             </form>
                                         </div>
@@ -183,7 +183,7 @@
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <button class="card h-100 border-0 shadow-sm text-decoration-none text-dark w-100 p-0" 
-                                    data-bs-toggle="modal" data-bs-target="#passwordModal" style="cursor: pointer;">
+                                    data-bs-toggle="modal" data-bs-target="#passwordModal" style="cursor: pointer; border: none; background: white;">
                                 <div class="card-body text-center p-3">
                                     <div class="bg-danger bg-opacity-10 text-danger rounded-circle p-3 mx-auto mb-2 d-inline-block">
                                         <i class="bi bi-lock fs-3"></i>
@@ -317,23 +317,21 @@
 
 @push('styles')
 <style>
-.bg-gradient-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.banner-gradient {
+    background: linear-gradient(135deg, #e84c93 0%, #b24dd8 50%, #5e7af5 100%);
 }
 .bg-gradient-success {
     background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
 }
-.avatar-xxl { font-size: 2.5rem; }
 .card { transition: all 0.3s ease; }
 .card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.1) !important; }
-.position-absolute.top-0.end-0 { right: -8px; top: -8px; }
 </style>
 @endpush
 
 @push('scripts')
 <script>
-// Preview foto upload
 document.addEventListener('DOMContentLoaded', function() {
+    // Preview foto upload
     const photoInput = document.getElementById('photoInput');
     const preview = document.getElementById('preview');
     
@@ -351,6 +349,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    
     // Update last login display
     const lastLoginElement = document.getElementById('lastLoginTime');
     const loginStatusElement = document.getElementById('loginStatus');
@@ -368,8 +367,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Auto-hide alerts
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(alert => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
+            if (bootstrap.Alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }
         });
     }, 5000);
 });

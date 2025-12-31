@@ -34,26 +34,26 @@
 
     <!-- Statistik -->
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card text-center bg-primary text-white">
                 <div class="card-body">
-                    <h3>{{ $guru->count() }}</h3>
+                    <h3>{{ $totalGuru }}</h3>
                     <p class="mb-0">Guru</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card text-center bg-warning text-dark">
                 <div class="card-body">
-                    <h3>{{ $wali->count() }}</h3>
+                    <h3>{{ $totalWali }}</h3>
                     <p class="mb-0">Wali Murid</p>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-4">
             <div class="card text-center bg-info text-white">
                 <div class="card-body">
-                    <h3>{{ $guru->count() + $wali->count() }}</h3>
+                    <h3>{{ $total }}</h3>
                     <p class="mb-0">Total</p>
                 </div>
             </div>
@@ -63,17 +63,17 @@
     <!-- Tabel Guru -->
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Guru ({{ $guru->count() }})</h6>
+            <h6 class="mb-0"><i class="bi bi-person-badge me-2 text-primary"></i>Guru ({{ $totalGuru }})</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Nama</th>
                             <th>Email</th>
                             <th>Mapel</th>
-                            <th>Aksi</th>
+                            <th width="150">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,7 +81,7 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
+                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center"
                                             style="width: 40px; height: 40px;">
                                             <i class="bi bi-person fs-6"></i>
                                         </div>
@@ -90,7 +90,17 @@
                                 </td>
                                 <td>{{ $user->email }}</td>
                                 <td>
-                                    <span class="badge bg-primary fs-6 px-2 py-1">{{ $user->mapel ?? '-' }}</span>
+                                    @if($user->mapel)
+                                        @if(is_array($user->mapel))
+                                            @foreach($user->mapel as $mapel)
+                                                <span class="badge bg-primary mb-1">{{ $mapel }}</span>
+                                            @endforeach
+                                        @else
+                                            <span class="badge bg-primary">{{ $user->mapel }}</span>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">-</span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="btn-group" role="group">
@@ -99,7 +109,7 @@
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form action="{{ route('user.destroy', $user->id) }}" method="POST"
-                                            class="d-inline" style="display: inline-block;">
+                                            class="d-inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"
@@ -112,7 +122,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">
+                                <td colspan="4" class="text-center py-4 text-muted">
                                     <i class="bi bi-person-plus display-4 mb-3"></i>
                                     <p>Belum ada guru</p>
                                 </td>
@@ -127,16 +137,17 @@
     <!-- Tabel Wali Murid -->
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
-            <h6 class="mb-0"><i class="bi bi-person-heart me-2 text-warning"></i>Wali Murid ({{ $wali->count() }})</h6>
+            <h6 class="mb-0"><i class="bi bi-person-heart me-2 text-warning"></i>Wali Murid ({{ $totalWali }})</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0 align-middle">
                     <thead class="table-light">
                         <tr>
                             <th>Nama</th>
                             <th>Email</th>
-                            <th>Aksi</th>
+                            <th>No. Telepon</th>
+                            <th width="150">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -144,7 +155,7 @@
                             <tr>
                                 <td>
                                     <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar avatar-sm bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center"
+                                        <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center"
                                             style="width: 40px; height: 40px;">
                                             <i class="bi bi-person-heart fs-6"></i>
                                         </div>
@@ -153,13 +164,20 @@
                                 </td>
                                 <td>{{ $user->email }}</td>
                                 <td>
+                                    @if($user->no_telepon)
+                                        <i class="bi bi-telephone me-1 text-success"></i>{{ $user->no_telepon }}
+                                    @else
+                                        <span class="text-muted">Belum diisi</span>
+                                    @endif
+                                </td>
+                                <td>
                                     <div class="btn-group" role="group">
                                         <a href="{{ route('user.edit', $user->id) }}"
                                             class="btn btn-sm btn-outline-primary" title="Edit">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         <form action="{{ route('user.destroy', $user->id) }}" method="POST"
-                                            class="d-inline" style="display: inline-block;">
+                                            class="d-inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"

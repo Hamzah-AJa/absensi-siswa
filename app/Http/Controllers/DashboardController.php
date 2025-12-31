@@ -79,17 +79,35 @@ class DashboardController extends Controller
         ));
 
         // IZIN PENDING - TAMBAH INI
-    $izinPending = Izin::where('status', 'pending')
-        ->with('siswa')
-        ->orderBy('created_at', 'desc')
-        ->limit(10)
-        ->get();
+        $izinPending = Izin::where('status', 'pending')
+            ->with('siswa')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
 
-    return view('dashboard', compact(
-        'hadir', 'izin', 'sakit', 'alpa',
-        'kelasList', 'mapelList',
-        'dataHariIni', 'dataMingguIni',
-        'izinPending'  // ← TAMBAH INI
-    ));
+        return view('dashboard', compact(
+            'hadir', 'izin', 'sakit', 'alpa',
+            'kelasList', 'mapelList',
+            'dataHariIni', 'dataMingguIni',
+            'izinPending'  // ← TAMBAH INI
+        ));
+
+        $mapelList = Presensi::whereNotNull('mapel')
+        ->where('mapel', '!=', '')
+        ->whereNot(function($query) {
+            $query->where('mapel', 'LIKE', '%izin%')
+                  ->orWhere('mapel', 'LIKE', '%sakit%');
+        })
+        ->distinct('mapel')
+        ->pluck('mapel');
+
+        $guruMapel = User::where('role', 'guru')
+        ->whereNotNull('mapel')
+        ->pluck('mapel');
+    
+    $mapelList = $mapelList->merge($guruMapel)->unique();
+    
+    return view('dashboard', compact('hadir', 'izin', 'sakit', 'alpa', 'kelasList', 'mapelList', 'dataHariIni', 'dataMingguIni'));
     }
+    
 }

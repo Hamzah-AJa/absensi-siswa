@@ -56,6 +56,15 @@ class LaporanController extends Controller
         $kelasList = Presensi::distinct()->pluck('kelas');
         $mapelList = Presensi::distinct()->pluck('mapel');
 
+        $mapelList = Presensi::whereNotNull('mapel')
+    ->where('mapel', '!=', '')
+    ->whereNot(function($query) {
+        $query->where('mapel', 'LIKE', '%izin%')
+              ->orWhere('mapel', 'LIKE', '%sakit%');
+    })
+    ->distinct()
+    ->pluck('mapel');
+
         return view('laporan.index', compact('laporan', 'kelasList', 'mapelList'));
     }
 

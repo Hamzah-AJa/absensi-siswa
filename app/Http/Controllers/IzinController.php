@@ -10,6 +10,7 @@ use Carbon\Carbon;
 
 class IzinController extends Controller
 {
+        
     public function __construct()
     {
         $this->middleware('auth');
@@ -24,10 +25,13 @@ class IzinController extends Controller
             return back()->with('error', 'Tidak memiliki akses!');
         }
         
-        // ✅ AUTO BUAT PRESENSI sesuai tanggal izin
+        // ✅ AUTO BUAT PRESENSI MAPEL = NULL
         $this->buatPresensiOtomatis($izin, 'izin');
         
-        $izin->update(['status' => 'approved']);
+        $izin->update([
+            'status' => 'approved',
+            'mapel' => null // ✅ RESET MAPEL KOSONG
+        ]);
         
         return back()->with('success', 'Izin ' . $izin->siswa->nama . ' dikonfirmasi & presensi otomatis dibuat!');
     }
@@ -41,10 +45,13 @@ class IzinController extends Controller
             return back()->with('error', 'Tidak memiliki akses!');
         }
         
-        // ✅ AUTO ALPA sesuai tanggal izin
+        // ✅ AUTO ALPA MAPEL = NULL
         $this->buatPresensiOtomatis($izin, 'alpa');
         
-        $izin->update(['status' => 'rejected']);
+        $izin->update([
+            'status' => 'rejected',
+            'mapel' => null // ✅ RESET MAPEL KOSONG
+        ]);
         
         return back()->with('success', 'Izin ' . $izin->siswa->nama . ' ditolak & presensi alpa otomatis dibuat!');
     }
@@ -66,7 +73,7 @@ class IzinController extends Controller
                     'siswa_id' => $izin->siswa_id,
                     'guru_id' => Auth::id(),
                     'kelas' => $izin->siswa->kelas,
-                    'mapel' => 'Izin ' . ucfirst($izin->keterangan), // Default mapel
+                    'mapel' => null, // ✅ SELALU NULL UNTUK IZIN
                     'tanggal' => $tanggal->format('Y-m-d'),
                     'keterangan' => $keteranganDefault,
                 ]);
@@ -75,4 +82,6 @@ class IzinController extends Controller
             $tanggal->addDay();
         }
     }
+
+    
 }

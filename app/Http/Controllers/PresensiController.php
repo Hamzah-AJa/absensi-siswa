@@ -10,29 +10,32 @@ use Illuminate\Support\Facades\Auth;
 
 class PresensiController extends Controller
 {
-    public function index()
-    {
-        $siswaList = Siswa::orderBy('nama')->get();
-        $kelasList = Siswa::distinct()->pluck('kelas');
-        
-        // Ambil daftar mapel dari guru yang ada di database
-        $mapelList = User::where('role', 'guru')
-            ->whereNotNull('mapel')
-            ->distinct()
-            ->pluck('mapel');
-        
-        return view('presensi.index', compact('siswaList', 'kelasList', 'mapelList'));
-    }
+    // Di method index() dan edit()
+public function index()
+{
+    $siswaList = Siswa::orderBy('nama')->get();
+    $kelasList = Siswa::distinct()->pluck('kelas');
+    
+    // ✅ MAPEL LIST: HANYA yg TIDAK NULL & BUKAN IZIN
+    $mapelList = User::where('role', 'guru')
+        ->whereNotNull('mapel')
+        ->where('mapel', '!=', '')
+        ->distinct()
+        ->pluck('mapel');
+    
+    return view('presensi.index', compact('siswaList', 'kelasList', 'mapelList'));
+}
 
     public function store(Request $request)
     {
         $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
-            'kelas' => 'required|string',
-            'mapel' => 'required|string',
-            'keterangan' => 'required|in:hadir,izin,sakit,alpa',
-            'tanggal' => 'required|date',
+    'siswa_id' => 'required|exists:siswa,id',
+    'kelas' => 'required|string',
+    'mapel' => 'nullable|string', // ✅ UBAH JADI NULLABLE
+    'keterangan' => 'required|in:hadir,izin,sakit,alpa',
+    'tanggal' => 'required|date',
         ]);
+
 
         Presensi::create([
             'guru_id' => Auth::id(),
@@ -81,11 +84,11 @@ class PresensiController extends Controller
         }
 
         $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
-            'kelas' => 'required|string',
-            'mapel' => 'required|string',
-            'keterangan' => 'required|in:hadir,izin,sakit,alpa',
-            'tanggal' => 'required|date',
+    'siswa_id' => 'required|exists:siswa,id',
+    'kelas' => 'required|string',
+    'mapel' => 'nullable|string', // ✅ UBAH JADI NULLABLE
+    'keterangan' => 'required|in:hadir,izin,sakit,alpa',
+    'tanggal' => 'required|date',
         ]);
 
         $presensi->update([

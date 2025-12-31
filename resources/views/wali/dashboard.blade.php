@@ -3,77 +3,121 @@
 @section('title', 'Dashboard')
 
 @section('content')
-    <h3 class="mb-2">
-        Welcome, <strong>{{ Auth::user()->name }}</strong> 👋
-    </h3>
-    <h4 class="mb-4">
-        <i class="bi bi-people-fill me-2"></i>Data Siswa
-    </h4>
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold mb-2">
+                    Welcome, <span class="text-primary">{{ Auth::user()->name }}</span> 👋
+                </h1>
+                <h4 class="text-muted">
+                    <i class="bi bi-people-fill me-2"></i>Data Siswa Anda
+                </h4>
+            </div>
 
-    @if ($siswa->isEmpty())
-        <div class="alert alert-warning">
-            <i class="bi bi-exclamation-circle"></i>
-            Belum ada siswa yang terhubung dengan akun wali ini.
-        </div>
-    @else
-        <div class="row">
-            @foreach ($siswa as $item)
-                <div class="col-md-6 col-lg-4">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title mb-1">{{ $item->nama }}</h5>
-                            <p class="text-muted mb-2">Kelas {{ $item->kelas }}</p>
-
-                            <hr>
-
-                        <strong>Presensi Terakhir</strong>
-                        <ul class="mt-2 mb-3">
-                            @forelse ($item->presensi->take(3) as $p)
-                                <li>
-                                    <span class="me-2">
-                                        {{ \Carbon\Carbon::parse($p->tanggal)->isoFormat('D MMMM') }}
-                                        @if($p->mapel && $p->keterangan == 'hadir')
-                                            - {{ $p->mapel }}
-                                        @endif
-                                    </span>
-                                    @if($p->keterangan == 'hadir')
-                                        <span class="badge bg-success">
-                                            <i class="bi bi-check-circle me-1"></i>Hadir
-                                        </span>
-                                    @elseif($p->keterangan == 'izin')
-                                        <span class="badge bg-warning text-dark">
-                                            <i class="bi bi-envelope-paper me-1"></i>Izin
-                                        </span>
-                                    @elseif($p->keterangan == 'sakit')
-                                        <span class="badge bg-info">
-                                            <i class="bi bi-heart-pulse me-1"></i>Sakit
-                                        </span>
-                                    @else
-                                        <span class="badge bg-danger">
-                                            <i class="bi bi-x-circle me-1"></i>Alpa
-                                        </span>
-                                    @endif
-                                </li>
-                            @empty
-                                <li class="text-muted">Belum ada presensi</li>
-                            @endforelse
-                        </ul>
-
-                            <a href="{{ route('wali.izin') }}" class="btn btn-primary btn-sm w-100">
-                                <i class="bi bi-envelope-paper"></i> Ajukan Izin
+            @if ($siswa->isEmpty())
+                <div class="text-center py-5">
+                    <div class="card border-0 bg-light shadow-sm mx-auto" style="max-width: 500px;">
+                        <div class="card-body p-5">
+                            <i class="bi bi-exclamation-circle text-warning" style="font-size: 4rem;"></i>
+                            <h5 class="mt-3 mb-0">Belum ada siswa</h5>
+                            <p class="text-muted mb-4">Belum ada siswa yang terhubung dengan akun wali ini.</p>
+                            <a href="{{ route('siswa.index') }}" class="btn btn-outline-primary">
+                                <i class="bi bi-people"></i> Lihat Daftar Siswa
                             </a>
                         </div>
                     </div>
                 </div>
-<<<<<<< HEAD
-            </div>
-        @endforeach
-    </div>
-@endif
-@endsection
-=======
-            @endforeach
+            @else
+                <div class="row g-4 justify-content-center">
+                    @foreach ($siswa as $item)
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 shadow-sm border-0 hover-lift">
+                                <div class="card-body p-4 d-flex flex-column">
+                                    <!-- Header Siswa -->
+                                    <div class="d-flex align-items-center mb-3">
+                                        <div class="bg-primary bg-opacity-10 p-2 rounded-circle me-3">
+                                            <i class="bi bi-person-fill text-primary" style="font-size: 1.5rem;"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="card-title mb-0 fw-bold">{{ $item->nama }}</h5>
+                                            <span class="badge bg-light text-dark border rounded-pill px-2 py-1">
+                                                {{ $item->kelas }}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Divider -->
+                                    <hr class="my-3">
+
+                                    <!-- Presensi Terakhir -->
+                                    <div class="flex-grow-1">
+                                        <h6 class="fw-semibold mb-3 text-uppercase text-muted small">
+                                            <i class="bi bi-calendar-check me-1"></i>Presensi Terakhir
+                                        </h6>
+                                        @forelse ($item->presensi->take(3) as $p)
+                                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                                <div>
+                                                    <div class="fw-medium">
+                                                        {{ \Carbon\Carbon::parse($p->tanggal)->isoFormat('D MMMM') }}
+                                                        @if($p->mapel && $p->keterangan == 'hadir')
+                                                            <span class="text-muted small ms-1">• {{ $p->mapel }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                @if($p->keterangan == 'hadir')
+                                                    <span class="badge bg-success px-3 py-2">
+                                                        <i class="bi bi-check-circle me-1"></i>Hadir
+                                                    </span>
+                                                @elseif($p->keterangan == 'izin')
+                                                    <span class="badge bg-warning text-dark px-3 py-2">
+                                                        <i class="bi bi-envelope-paper me-1"></i>Izin
+                                                    </span>
+                                                @elseif($p->keterangan == 'sakit')
+                                                    <span class="badge bg-info px-3 py-2">
+                                                        <i class="bi bi-heart-pulse me-1"></i>Sakit
+                                                    </span>
+                                                @else
+                                                    <span class="badge bg-danger px-3 py-2">
+                                                        <i class="bi bi-x-circle me-1"></i>Alpa
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @empty
+                                            <div class="text-center py-4">
+                                                <i class="bi bi-calendar-x text-muted" style="font-size: 2rem;"></i>
+                                                <p class="text-muted mt-2 mb-0">Belum ada presensi</p>
+                                            </div>
+                                        @endforelse
+                                    </div>
+
+                                    <!-- Action Button -->
+                                    <div class="mt-auto pt-3">
+                                        <a href="{{ route('wali.izin') }}" class="btn btn-primary w-100">
+                                            <i class="bi bi-envelope-paper me-2"></i>Ajukan Izin
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         </div>
-    @endif
+    </div>
+</div>
+
+<style>
+.hover-lift {
+    transition: all 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
+}
+.border-bottom {
+    border-bottom: 1px solid #e9ecef !important;
+}
+</style>
 @endsection
->>>>>>> 0735a598a38dbb95bd8f7970b9f904a005197915

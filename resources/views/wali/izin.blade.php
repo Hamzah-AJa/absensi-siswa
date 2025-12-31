@@ -63,7 +63,6 @@
                                        name="tanggal_selesai" 
                                        class="form-control" 
                                        value="{{ old('tanggal_selesai') }}"
-                                       min="{{ old('tanggal_mulai', now()->format('Y-m-d')) }}"
                                        required>
                                 @error('tanggal_selesai')
                                     <div class="text-danger">{{ $message }}</div>

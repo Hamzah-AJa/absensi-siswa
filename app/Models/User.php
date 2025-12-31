@@ -10,7 +10,7 @@ class User extends Authenticatable
     use Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'role', 'mapel', 'google_id', 'izin_tanpa_foto, profile_photo'
+        'name', 'email', 'no_telepon', 'password', 'role', 'mapel', 'google_id', 'izin_tanpa_foto, profile_photo'
     ];
 
     protected $hidden = [
@@ -50,6 +50,5 @@ class User extends Authenticatable
     {
         return $this->role === 'wali';
     }
-
     
 }
