@@ -105,7 +105,7 @@
                                         </h6>
                                         <div class="d-flex align-items-center gap-3 mb-2">
                                             <span class="badge bg-success fs-6 px-4 py-2 rounded-pill">
-                                                ✅ Terhubung
+                                                Terhubung
                                             </span>
                                             <form method="POST" action="{{ route('google.unlink') }}" class="d-inline">
                                                 @csrf
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function() {
             hour: '2-digit', minute: '2-digit'
         });
         if (loginStatusElement) {
-            loginStatusElement.innerHTML = '✅ Baru saja aktif';
+            loginStatusElement.innerHTML = 'Baru saja aktif';
         }
     }
 
