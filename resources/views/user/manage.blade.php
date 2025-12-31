@@ -165,7 +165,7 @@
                                 <td>{{ $user->email }}</td>
                                 <td>
                                     @if($user->no_telepon)
-                                        <i class="bi bi-telephone me-1 text-success"></i>{{ $user->no_telepon }}
+                                        <i class="me-1 text-success"></i>{{ $user->no_telepon }}
                                     @else
                                         <span class="text-muted">Belum diisi</span>
                                     @endif
